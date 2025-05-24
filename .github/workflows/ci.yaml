@@ -39,6 +39,20 @@ jobs:
       - name: Build Docker image
         run: docker build -t utm-backend .
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U utm_user; then
+              echo "Postgres is ready!"
+              break
+            fi
+            echo "Waiting for Postgres..."
+            sleep 2
+          done
+
       - name: Run migrations
         env:
           DATABASE_URL: postgresql://utm_user:secure_password@localhost:5432/utm_db
