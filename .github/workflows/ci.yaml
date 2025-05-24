@@ -1,6 +1,5 @@
-name: CI
+name: CI/CD Pipeline
 
-# ← define one or more events here
 on:
   push:
     branches:
@@ -8,14 +7,14 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: {}   # ← also allow manual runs
+  workflow_dispatch: {}
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    
     services:
-      db:
+      postgres:
         image: postgres:15
         env:
           POSTGRES_USER: utm_user
@@ -30,43 +29,57 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.13'
-
-      - name: Build Docker image
-        run: docker build -t utm-backend .
-
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Wait for Postgres
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Wait for PostgreSQL
         run: |
           for i in {1..30}; do
             if pg_isready -h localhost -p 5432 -U utm_user; then
-              echo "Postgres is ready!"
+              echo "PostgreSQL is ready!"
               break
             fi
-            echo "Waiting for Postgres..."
+            echo "Waiting for PostgreSQL..."
             sleep 2
           done
-
-      - name: Run migrations
+          
+      - name: Run database migrations
         env:
-          DATABASE_URL: postgresql://utm_user:secure_password@db:5432/utm_db
-          SECRET_KEY: your-secret-key-here
+          DATABASE_URL: postgresql://utm_user:secure_password@localhost:5432/utm_db
+          SECRET_KEY: test-secret-key
           ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
         run: |
-          docker run --rm -e DATABASE_URL -e SECRET_KEY -e ALGORITHM -e ACCESS_TOKEN_EXPIRE_MINUTES utm-backend alembic upgrade head
-
+          alembic upgrade head
+          
       - name: Run tests
         env:
-          DATABASE_URL: postgresql://utm_user:secure_password@db:5432/utm_db
-          SECRET_KEY: your-secret-key-here
+          DATABASE_URL: postgresql://utm_user:secure_password@localhost:5432/utm_db
+          SECRET_KEY: test-secret-key
           ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
         run: |
-          docker run --rm -e DATABASE_URL -e SECRET_KEY -e ALGORITHM -e ACCESS_TOKEN_EXPIRE_MINUTES utm-backend pytest --maxfail=1 -q
+          python -m pytest --maxfail=1 -v
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "https://api.render.com/deploy/srv-d0p1n9uuk2gs73978mi0?key=97jAeFHcjIg"
