@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - utm_postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432" # Use .env at root or default
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-utm_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-utm_db}
+    restart: unless-stopped
+
+volumes:
+  utm_postgres_data:
