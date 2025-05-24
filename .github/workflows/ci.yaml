@@ -31,12 +31,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - name: Checkout repo
-        uses: ./.github/actions/checkout     # or actions/checkout if allowed
-
-      - name: Setup Python
-        uses: ./.github/actions/setup-python # or actions/setup-python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
 
       - name: Build Docker image
         run: docker build -t utm-backend .
