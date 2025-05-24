@@ -10,8 +10,9 @@ RUN apt-get update \
 
 # copy & install Python deps
 COPY requirements.txt .
-RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --no-index --find-links=/app/wheels \
+      -r requirements.txt \
+    --root-user-action=ignore
 
 # copy code
 COPY . .
@@ -19,4 +20,4 @@ COPY . .
 # run migrations (optional) then start
 # if you use Alembic:
 # ENTRYPOINT ["alembic", "upgrade", "head"]
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
