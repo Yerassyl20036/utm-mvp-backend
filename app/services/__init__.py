@@ -1,0 +1,3 @@
+# backend/app/services/__init__.py
+# from .flight_service import ...
+from .telemetry_simulation import simulate_flight_telemetry

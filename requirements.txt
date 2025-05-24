@@ -1,0 +1,10 @@
+# backend/requirements.txt
+fastapi[all]
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary  # For PostgreSQL
+alembic          # For database migrations
+python-jose[cryptography] # For JWT
+passlib[bcrypt]         # For password hashing
+python-dotenv           # For .env file
+# For later: websockets, python-multipart (for form data)
