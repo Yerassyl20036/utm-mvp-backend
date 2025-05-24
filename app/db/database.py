@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.core.config import settings
-from app.db.base_class import Base # Import your Base
+from app.db.base_class import Base  # Import your Base
 
 # For synchronous operations (FastAPI default)
 engine = create_engine(
@@ -12,6 +13,7 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 # Dependency to get DB session
 def get_db():
     db = SessionLocal()
@@ -19,6 +21,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 # This function can be used to create tables (e.g., for tests or initial setup if not using Alembic for everything)
 # But Alembic will be our primary tool for schema management.
@@ -29,7 +32,7 @@ def init_db():
     # We will populate app.models.__init__ later to import all models.
     # For now, this is a placeholder.
     # from app import models # This will import __init__.py from models folder
-    
+
     print("Initializing database and creating tables if they don't exist...")
     Base.metadata.create_all(bind=engine)
     print("Database initialization complete.")
