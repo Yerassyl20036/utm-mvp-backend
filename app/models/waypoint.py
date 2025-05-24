@@ -1,14 +1,22 @@
 # backend/app/models/waypoint.py
-from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy import Column, Float, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+
 from app.db.base_class import Base
 
+
 class Waypoint(Base):
-    flight_plan_id = Column(Integer, ForeignKey("flight_plans.id", name="fk_waypoint_flightplan_id", ondelete="CASCADE"), nullable=False) # Added ondelete
-    
+    flight_plan_id = Column(
+        Integer,
+        ForeignKey(
+            "flight_plans.id", name="fk_waypoint_flightplan_id", ondelete="CASCADE"
+        ),
+        nullable=False,
+    )  # Added ondelete
+
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-    altitude_m = Column(Float, nullable=False) # Altitude in meters
+    altitude_m = Column(Float, nullable=False)  # Altitude in meters
     sequence_order = Column(Integer, nullable=False, index=True)
 
     # Relationship
