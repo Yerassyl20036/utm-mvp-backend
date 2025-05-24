@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     postgresql \
     postgresql-contrib \
-    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
@@ -21,31 +20,11 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy application code
 COPY . .
 
-# Create PostgreSQL data directory
-RUN mkdir -p /var/lib/postgresql/data && \
-    chown -R postgres:postgres /var/lib/postgresql/data
+# Create PostgreSQL data directory and log directory with proper permissions
+RUN mkdir -p /var/lib/postgresql/data /app/logs && \
+    chown -R postgres:postgres /var/lib/postgresql/data /app/logs
 
-# Create supervisor configuration
-RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'nodaemon=true' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo '[program:postgresql]' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'command=/usr/lib/postgresql/15/bin/postgres -D /var/lib/postgresql/data' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'user=postgres' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'stderr_logfile=/var/log/postgresql.err.log' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'stdout_logfile=/var/log/postgresql.out.log' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo '[program:fastapi]' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'command=uvicorn app.main:app --host 0.0.0.0 --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'directory=/app' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'stderr_logfile=/var/log/fastapi.err.log' >> /etc/supervisor/conf.d/supervisord.conf && \
-    echo 'stdout_logfile=/var/log/fastapi.out.log' >> /etc/supervisor/conf.d/supervisord.conf
-
-# Create startup script
+# Create startup script with proper log file location
 RUN echo '#!/bin/bash' > /app/start.sh && \
     echo 'set -e' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
@@ -54,7 +33,7 @@ RUN echo '#!/bin/bash' > /app/start.sh && \
     echo '    echo "Initializing PostgreSQL database..."' >> /app/start.sh && \
     echo '    su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /var/lib/postgresql/data"' >> /app/start.sh && \
     echo '    echo "Starting PostgreSQL temporarily..."' >> /app/start.sh && \
-    echo '    su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql.log start"' >> /app/start.sh && \
+    echo '    su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /app/logs/postgresql.log start"' >> /app/start.sh && \
     echo '    sleep 5' >> /app/start.sh && \
     echo '    echo "Creating database and user..."' >> /app/start.sh && \
     echo '    su - postgres -c "createdb utm_db"' >> /app/start.sh && \
@@ -65,7 +44,7 @@ RUN echo '#!/bin/bash' > /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo '# Start PostgreSQL' >> /app/start.sh && \
     echo 'echo "Starting PostgreSQL..."' >> /app/start.sh && \
-    echo 'su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /var/log/postgresql.log start"' >> /app/start.sh && \
+    echo 'su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /var/lib/postgresql/data -l /app/logs/postgresql.log start"' >> /app/start.sh && \
     echo 'sleep 5' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo '# Run migrations' >> /app/start.sh && \
