@@ -24,7 +24,11 @@ class User(Base):
     deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
 
     # Relationships
-    organization = relationship("Organization", back_populates="users")
+    organization = relationship(
+        "Organization",
+        back_populates="users",
+        foreign_keys=[organization_id]  # Explicitly specify which foreign key to use
+    )
     
     # Drones directly owned by this user (primarily for SOLO_PILOT)
     owned_drones = relationship(
@@ -59,8 +63,10 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="dynamic"
     )
-
+    
     def __repr__(self):
-        return f"<User(id={self.id}, email='{self.email}', role='{self.role.value}')>"
+        # if self.role is already an enum, use .value, otherwise assume it's a string
+        role_val = self.role.value if hasattr(self.role, "value") else self.role
+        return f"<User(id={self.id}, email='{self.email}', role='{role_val}')>"
     
     
