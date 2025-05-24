@@ -7,8 +7,18 @@ class TelemetryLog(Base):
     # Override id for BigInteger if high frequency telemetry is expected
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
 
-    flight_plan_id = Column(Integer, ForeignKey("flight_plans.id", name="fk_telemetry_flightplan_id", ondelete="SET NULL"), nullable=True, index=True) # SET NULL if plan is deleted but logs kept
-    drone_id = Column(Integer, ForeignKey("drones.id", name="fk_telemetry_drone_id", ondelete="CASCADE"), nullable=False, index=True)
+    flight_plan_id = Column(
+        Integer, 
+        ForeignKey("flight_plans.id", name="fk_telemetry_flightplan_id", ondelete="SET NULL"), 
+        nullable=True, 
+        index=True
+    )
+    drone_id = Column(
+        Integer, 
+        ForeignKey("drones.id", name="fk_telemetry_drone_id", ondelete="CASCADE"), 
+        nullable=False, 
+        index=True
+    )
     
     timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
     latitude = Column(Float, nullable=False)
@@ -20,7 +30,12 @@ class TelemetryLog(Base):
 
     # Relationships
     flight_plan = relationship("FlightPlan", back_populates="telemetry_logs")
-    drone = relationship("Drone", back_populates="telemetry_logs")
+    drone = relationship(
+        "Drone", 
+        foreign_keys=[drone_id],
+        back_populates="telemetry_logs",
+        primaryjoin="TelemetryLog.drone_id == Drone.id"
+    )
 
     def __repr__(self):
         return f"<TelemetryLog(id={self.id}, flight_plan_id={self.flight_plan_id}, ts='{self.timestamp}')>"

@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SQLAlchemyEnum, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
+from app.models.telemetry_log import TelemetryLog
 
 class DroneOwnerType(str, enum.Enum):
     ORGANIZATION = "ORGANIZATION"
@@ -34,13 +35,26 @@ class Drone(Base):
     last_telemetry_id = Column(Integer, ForeignKey("telemetry_logs.id", name="fk_drone_last_telemetry_id", use_alter=True), nullable=True) # use_alter for potential circular dep
     last_seen_at = Column(DateTime(timezone=True), nullable=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    
+    telemetry_logs = relationship(
+        TelemetryLog,                       # or "TelemetryLog"
+        back_populates="drone",
+        foreign_keys=[TelemetryLog.drone_id],  # ← explicitly point at the drone_id FK
+        cascade="all, delete-orphan",
+        lazy="dynamic",
+    )
 
     # Relationships
     assigned_users_association = relationship("UserDroneAssignment", back_populates="drone", cascade="all, delete-orphan")
     flight_plans = relationship("FlightPlan", back_populates="drone", cascade="all, delete-orphan")
-    telemetry_logs = relationship("TelemetryLog", back_populates="drone", cascade="all, delete-orphan", lazy="dynamic") # Can be many
-
-    # last_telemetry_point = relationship("TelemetryLog", foreign_keys=[last_telemetry_id], post_update=True) # post_update for circular dep if needed
+    
+    
+    last_telemetry_point = relationship(
+        "TelemetryLog",
+        foreign_keys=[last_telemetry_id],
+        post_update=True,
+        primaryjoin="Drone.last_telemetry_id == TelemetryLog.id"
+    )
 
     def __repr__(self):
         return f"<Drone(id={self.id}, serial_number='{self.serial_number}')>"
