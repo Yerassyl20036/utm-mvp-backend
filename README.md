@@ -11,6 +11,25 @@ This project implements a FastAPI-based backend service for managing:
 - Real-time telemetry via WebSocket
 - Restricted zones and geospatial features
 
+## API Documentation
+
+When the server is running, you can explore and test all available endpoints through:
+- **Swagger UI**: http://localhost:8000/docs
+  - Interactive documentation
+  - Test endpoints directly from the browser
+  - Full request/response schema documentation
+  - Authentication support
+- **ReDoc**: http://localhost:8000/redoc
+  - Clean, organized documentation view
+  - Easy-to-read format
+  - Mobile-friendly
+
+Both interfaces provide detailed information about:
+- Available endpoints and HTTP methods
+- Request/response schemas
+- Authentication requirements
+- Example requests and responses
+
 ## Prerequisites
 
 - Python 3.12+
@@ -56,12 +75,6 @@ docker-compose up --build
 ```
 
 The API will be available at `http://localhost:8000`
-
-## API Documentation
-
-Once the server is running, you can access:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
 
 ## Project Structure
 
