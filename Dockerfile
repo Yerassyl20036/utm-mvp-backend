@@ -10,9 +10,7 @@ RUN apt-get update \
 
 # copy & install Python deps
 COPY requirements.txt .
-RUN pip install --no-cache-dir --no-index --find-links=/app/wheels \
-      -r requirements.txt \
-    --root-user-action=ignore
+RUN pip install --no-cache-dir -r requirements.txt --root-user-action=ignore
 
 # copy code
 COPY . .
